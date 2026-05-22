@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>대화턴 프로그램</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #ffffff;
+        --bg2: #f5f4f0;
+        --bg3: #eeede8;
+        --text: #1a1a18;
+        --text2: #6b6a65;
+        --text3: #9e9d98;
+        --border: rgba(0, 0, 0, 0.12);
+        --border2: rgba(0, 0, 0, 0.22);
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --info-bg: #e6f1fb;
+        --info-text: #185fa5;
+        --success-bg: #eaf3de;
+        --success-text: #3b6d11;
+        --warn-bg: #faeeda;
+        --warn-text: #854f0b;
+        --danger-bg: #fcebeb;
+        --danger-text: #a32d2d;
+        --danger-stroke: #e24b4a;
+        --warn-stroke: #ef9f27;
+        --info-stroke: #378add;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #1c1c1a;
+          --bg2: #252523;
+          --bg3: #2e2e2b;
+          --text: #f0efe9;
+          --text2: #a0a09a;
+          --text3: #6b6a65;
+          --border: rgba(255, 255, 255, 0.1);
+          --border2: rgba(255, 255, 255, 0.2);
+          --info-bg: #0c447c;
+          --info-text: #b5d4f4;
+          --success-bg: #27500a;
+          --success-text: #c0dd97;
+          --warn-bg: #633806;
+          --warn-text: #fac775;
+          --danger-bg: #791f1f;
+          --danger-text: #f7c1c1;
+        }
+      }
+
+      html,
+      body {
+        min-height: 100vh;
+        background: var(--bg3);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: var(--text);
+      }
+
+      .page {
+        max-width: 560px;
+        margin: 0 auto;
+        padding: 2rem 1rem 4rem;
+      }
+
+      h1 {
+        font-size: 18px;
+        font-weight: 500;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      h1 .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--text3);
+        display: inline-block;
+      }
+      h1 .dot.active {
+        background: #3b6d11;
+      }
+      h1 .dot.over {
+        background: #a32d2d;
+      }
+
+      /* total bar */
+      .total-bar {
+        background: var(--bg);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 1rem 1.25rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .total-bar .label {
+        font-size: 12px;
+        color: var(--text2);
+        margin-bottom: 4px;
+      }
+      .total-bar .time-big {
+        font-size: 30px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+      }
+      .badge {
+        font-size: 11px;
+        padding: 3px 10px;
+        border-radius: var(--radius-md);
+        background: var(--bg2);
+        color: var(--text2);
+        display: inline-block;
+      }
+      .badge.active {
+        background: var(--success-bg);
+        color: var(--success-text);
+      }
+      .badge.over {
+        background: var(--danger-bg);
+        color: var(--danger-text);
+      }
+      .badge.paused {
+        background: var(--warn-bg);
+        color: var(--warn-text);
+      }
+      .badge.done {
+        background: var(--bg2);
+        color: var(--text2);
+      }
+
+      /* clocks grid */
+      .clocks-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+      .clock-card {
+        background: var(--bg);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .clabel {
+        font-size: 12px;
+        color: var(--text2);
+        margin-bottom: 0.6rem;
+      }
+      .csub {
+        font-size: 12px;
+        color: var(--text3);
+        margin-top: 0.5rem;
+      }
+
+      .overtime-display {
+        font-size: 38px;
+        font-weight: 500;
+        color: var(--danger-text);
+        letter-spacing: 0.06em;
+        margin: 0.25rem 0;
+      }
+      .overtime-display.idle {
+        color: var(--text3);
+        font-size: 32px;
+      }
+      .ot-note {
+        font-size: 11px;
+        color: var(--text2);
+        text-align: center;
+        line-height: 1.5;
+      }
+
+      /* controls */
+      .controls {
+        background: var(--bg);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 1rem 1.25rem;
+        margin-bottom: 1rem;
+      }
+      .controls-title {
+        font-size: 12px;
+        color: var(--text2);
+        margin-bottom: 0.75rem;
+      }
+      .inputs-row {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+        flex-wrap: wrap;
+      }
+      .inp-group {
+        flex: 1;
+        min-width: 120px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .inp-group label {
+        font-size: 11px;
+        color: var(--text2);
+      }
+      .inp-group input {
+        height: 36px;
+        border-radius: var(--radius-md);
+        border: 0.5px solid var(--border2);
+        background: var(--bg2);
+        color: var(--text);
+        padding: 0 10px;
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+      .inp-group input:focus {
+        border-color: var(--info-text);
+      }
+
+      .btn-row {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+      button {
+        height: 36px;
+        padding: 0 1rem;
+        border-radius: var(--radius-md);
+        border: 0.5px solid var(--border2);
+        background: transparent;
+        color: var(--text);
+        font-size: 13px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition:
+          background 0.15s,
+          opacity 0.15s;
+        font-family: inherit;
+      }
+      button:hover:not(:disabled) {
+        background: var(--bg2);
+      }
+      button:active:not(:disabled) {
+        transform: scale(0.98);
+      }
+      button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      button.primary {
+        background: var(--text);
+        color: var(--bg);
+        border-color: transparent;
+      }
+      button.primary:hover:not(:disabled) {
+        opacity: 0.85;
+        background: var(--text);
+      }
+
+      button.danger-btn {
+        border-color: var(--danger-stroke);
+        color: var(--danger-text);
+      }
+      button.danger-btn:hover:not(:disabled) {
+        background: var(--danger-bg);
+      }
+
+      button.turn-btn {
+        width: 100%;
+        justify-content: center;
+        font-size: 13px;
+        margin-top: 0.75rem;
+      }
+      button.turn-btn.hot {
+        border-color: var(--danger-stroke);
+        color: var(--danger-text);
+      }
+
+      /* log */
+      .log-section {
+        display: none;
+      }
+      .log-title {
+        font-size: 12px;
+        color: var(--text2);
+        margin-bottom: 0.5rem;
+      }
+      .log-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        max-height: 150px;
+        overflow-y: auto;
+      }
+      .log-item {
+        font-size: 12px;
+        color: var(--text2);
+        padding: 5px 10px;
+        background: var(--bg2);
+        border-radius: var(--radius-md);
+      }
+      .log-item b {
+        color: var(--text);
+        font-weight: 500;
+      }
+
+      svg.analog {
+        overflow: visible;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <h1><span class="dot" id="statusDot"></span> 대화턴 프로그램</h1>
+
+      <!-- 전체 대화 시간 -->
+      <div class="total-bar">
+        <div>
+          <div class="label">전체 대화 시간 남음</div>
+          <div class="time-big" id="totalDisplay">--:--</div>
+        </div>
+        <div style="text-align: right">
+          <span class="badge" id="statusBadge">대기 중</span>
+          <div
+            style="font-size: 11px; color: var(--text3); margin-top: 6px"
+            id="totalSet"
+          >
+            설정: --분
+          </div>
+        </div>
+      </div>
+
+      <!-- 두 시계 -->
+      <div class="clocks-row">
+        <div class="clock-card">
+          <div class="clabel">발화 제한시간</div>
+          <svg
+            class="analog"
+            id="analogClock"
+            width="140"
+            height="140"
+            viewBox="0 0 140 140"
+          >
+            <circle
+              cx="70"
+              cy="70"
+              r="64"
+              fill="none"
+              stroke="var(--border)"
+              stroke-width="1"
+            />
+            <g id="ticks"></g>
+            <circle
+              id="arcRemain"
+              cx="70"
+              cy="70"
+              r="56"
+              fill="none"
+              stroke="var(--info-stroke)"
+              stroke-width="6"
+              stroke-dasharray="351.86"
+              stroke-dashoffset="0"
+              stroke-linecap="round"
+              transform="rotate(-90 70 70)"
+            />
+            <line
+              id="minHand"
+              x1="70"
+              y1="70"
+              x2="70"
+              y2="18"
+              stroke="var(--text)"
+              stroke-width="2.5"
+              stroke-linecap="round"
+            />
+            <line
+              id="secHand"
+              x1="70"
+              y1="70"
+              x2="70"
+              y2="14"
+              stroke="var(--danger-stroke)"
+              stroke-width="1"
+              stroke-linecap="round"
+            />
+            <circle cx="70" cy="70" r="3" fill="var(--text)" />
+          </svg>
+          <div class="csub" id="analogLabel">--:--</div>
+        </div>
+
+        <div class="clock-card">
+          <div class="clabel">초과 시간</div>
+          <div class="overtime-display idle" id="overtimeDisplay">00:00</div>
+          <div class="ot-note" id="overtimeNote">
+            발화 제한시간 종료 후<br />카운트업 시작
+          </div>
+          <button class="turn-btn" id="turnBtn" disabled>
+            <i class="ti ti-arrow-right"></i> 대화 넘기기
+          </button>
+        </div>
+      </div>
+
+      <!-- 컨트롤 -->
+      <div class="controls">
+        <div class="controls-title">시간 설정</div>
+        <div class="inputs-row">
+          <div class="inp-group">
+            <label>전체 대화 시간 (분)</label>
+            <input type="number" id="totalMin" value="60" min="1" max="600" />
+          </div>
+          <div class="inp-group">
+            <label>발화 제한시간 (분)</label>
+            <input type="number" id="limitMin" value="20" min="1" max="600" />
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="primary" id="startBtn">
+            <i class="ti ti-player-play"></i> 시작
+          </button>
+          <button id="pauseBtn" disabled>
+            <i class="ti ti-player-pause"></i> 일시정지
+          </button>
+          <button class="danger-btn" id="resetBtn">
+            <i class="ti ti-refresh"></i> 초기화
+          </button>
+        </div>
+      </div>
+
+      <!-- 기록 -->
+      <div class="log-section" id="logSection">
+        <div class="log-title">대화 넘기기 기록</div>
+        <ul class="log-list" id="logList"></ul>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const CIRCUMFERENCE = 2 * Math.PI * 56;
+
+        let totalSec = 0,
+          limitSec = 0;
+        let totalRemain = 0,
+          limitRemain = 0,
+          overtimeSec = 0;
+        let phase = "idle"; // idle | countdown | overtime | done
+        let paused = false;
+        let ticker = null;
+        let turnCount = 0;
+
+        const $ = (id) => document.getElementById(id);
+
+        // draw tick marks
+        (function () {
+          const g = $("ticks");
+          for (let i = 0; i < 60; i++) {
+            const angle = (i / 60) * 2 * Math.PI - Math.PI / 2;
+            const isMajor = i % 5 === 0;
+            const r1 = isMajor ? 58 : 61;
+            const line = document.createElementNS(
+              "http://www.w3.org/2000/svg",
+              "line",
+            );
+            line.setAttribute("x1", (70 + r1 * Math.cos(angle)).toFixed(2));
+            line.setAttribute("y1", (70 + r1 * Math.sin(angle)).toFixed(2));
+            line.setAttribute("x2", (70 + 64 * Math.cos(angle)).toFixed(2));
+            line.setAttribute("y2", (70 + 64 * Math.sin(angle)).toFixed(2));
+            line.setAttribute(
+              "stroke",
+              isMajor ? "var(--text2)" : "var(--border2)",
+            );
+            line.setAttribute("stroke-width", isMajor ? "1.5" : "0.5");
+            g.appendChild(line);
+          }
+        })();
+
+        function fmt(sec) {
+          const m = Math.floor(Math.abs(sec) / 60);
+          const s = Math.abs(sec) % 60;
+          return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+        }
+
+        function updateAnalog(remainSec, totalLimit) {
+          if (totalLimit <= 0) return;
+          const fraction = Math.max(0, remainSec / totalLimit);
+          const offset = (CIRCUMFERENCE * (1 - fraction)).toFixed(2);
+          $("arcRemain").setAttribute("stroke-dashoffset", offset);
+          $("arcRemain").setAttribute(
+            "stroke",
+            fraction < 0.2
+              ? "var(--danger-stroke)"
+              : fraction < 0.4
+                ? "var(--warn-stroke)"
+                : "var(--info-stroke)",
+          );
+
+          const minAngle = (1 - fraction) * 360 - 90;
+          const minRad = (minAngle * Math.PI) / 180;
+          $("minHand").setAttribute(
+            "x2",
+            (70 + 52 * Math.cos(minRad)).toFixed(2),
+          );
+          $("minHand").setAttribute(
+            "y2",
+            (70 + 52 * Math.sin(minRad)).toFixed(2),
+          );
+
+          const secFrac = (remainSec % 60) / 60;
+          const secAngle = (1 - secFrac) * 360 - 90;
+          const secRad = (secAngle * Math.PI) / 180;
+          $("secHand").setAttribute(
+            "x2",
+            (70 + 56 * Math.cos(secRad)).toFixed(2),
+          );
+          $("secHand").setAttribute(
+            "y2",
+            (70 + 56 * Math.sin(secRad)).toFixed(2),
+          );
+        }
+
+        function setBadge(text, cls) {
+          const b = $("statusBadge");
+          b.textContent = text;
+          b.className = "badge" + (cls ? " " + cls : "");
+        }
+
+        function setDot(cls) {
+          $("statusDot").className = "dot" + (cls ? " " + cls : "");
+        }
+
+        function render() {
+          $("totalDisplay").textContent = fmt(totalRemain);
+          $("totalSet").textContent =
+            "설정: " + Math.round(totalSec / 60) + "분";
+
+          if (phase === "countdown") {
+            $("analogLabel").textContent = fmt(limitRemain);
+            updateAnalog(limitRemain, limitSec);
+            $("overtimeDisplay").textContent = "00:00";
+            $("overtimeDisplay").className = "overtime-display idle";
+            setBadge(
+              paused ? "일시정지" : "발화 중",
+              paused ? "paused" : "active",
+            );
+            setDot(paused ? "" : "active");
+          } else if (phase === "overtime") {
+            $("analogLabel").textContent = "00:00";
+            updateAnalog(0, limitSec);
+            $("overtimeDisplay").textContent = fmt(overtimeSec);
+            $("overtimeDisplay").className = "overtime-display";
+            $("overtimeNote").textContent =
+              "제한시간 초과 — 언제 넘기실 건가요?";
+            setBadge(
+              paused ? "일시정지" : "초과 중",
+              paused ? "paused" : "over",
+            );
+            setDot(paused ? "" : "over");
+          } else if (phase === "done") {
+            setBadge("종료", "done");
+            setDot("");
+          } else {
+            setBadge("대기 중", "");
+            setDot("");
+          }
+        }
+
+        function tick() {
+          if (paused) return;
+          if (totalRemain > 0) totalRemain--;
+          else {
+            endSession();
+            return;
+          }
+
+          if (phase === "countdown") {
+            if (limitRemain > 0) limitRemain--;
+            else {
+              phase = "overtime";
+              $("turnBtn").disabled = false;
+              $("turnBtn").classList.add("hot");
+            }
+          } else if (phase === "overtime") {
+            overtimeSec++;
+          }
+          render();
+        }
+
+        function startSession() {
+          totalSec = Math.max(1, parseInt($("totalMin").value) || 60) * 60;
+          limitSec = Math.max(1, parseInt($("limitMin").value) || 20) * 60;
+          totalRemain = totalSec;
+          limitRemain = limitSec;
+          overtimeSec = 0;
+          phase = "countdown";
+          paused = false;
+          turnCount = 0;
+          $("logList").innerHTML = "";
+          $("logSection").style.display = "none";
+          $("turnBtn").disabled = false;
+          $("turnBtn").classList.remove("hot");
+          $("startBtn").disabled = true;
+          $("pauseBtn").disabled = false;
+          $("totalMin").disabled = true;
+          $("limitMin").disabled = true;
+          $("overtimeNote").textContent =
+            "발화 제한시간 종료 후\n카운트업 시작";
+          clearInterval(ticker);
+          ticker = setInterval(tick, 1000);
+          render();
+        }
+
+        function endSession() {
+          phase = "done";
+          clearInterval(ticker);
+          $("turnBtn").disabled = true;
+          $("startBtn").disabled = false;
+          $("pauseBtn").disabled = true;
+          render();
+        }
+
+        function logTurn() {
+          if (phase === "idle" || phase === "done") return;
+          turnCount++;
+          const overBy = phase === "overtime" ? overtimeSec : 0;
+          const li = document.createElement("li");
+          li.className = "log-item";
+          li.innerHTML =
+            overBy > 0
+              ? `<b>#${turnCount}</b> 대화 넘김 — 제한 초과 <b>${fmt(overBy)}</b>`
+              : `<b>#${turnCount}</b> 대화 넘김 — 제한 내 (${fmt(limitRemain)} 남음)`;
+          $("logList").prepend(li);
+          $("logSection").style.display = "block";
+
+          limitRemain = limitSec;
+          overtimeSec = 0;
+          phase = "countdown";
+          $("turnBtn").classList.remove("hot");
+          $("overtimeNote").textContent =
+            "발화 제한시간 종료 후\n카운트업 시작";
+          render();
+        }
+
+        function resetAll() {
+          clearInterval(ticker);
+          phase = "idle";
+          paused = false;
+          totalRemain = 0;
+          limitRemain = 0;
+          overtimeSec = 0;
+          $("startBtn").disabled = false;
+          $("pauseBtn").disabled = true;
+          $("pauseBtn").innerHTML =
+            '<i class="ti ti-player-pause"></i> 일시정지';
+          $("turnBtn").disabled = true;
+          $("turnBtn").classList.remove("hot");
+          $("totalMin").disabled = false;
+          $("limitMin").disabled = false;
+          $("totalDisplay").textContent = "--:--";
+          $("analogLabel").textContent = "--:--";
+          $("overtimeDisplay").textContent = "00:00";
+          $("overtimeDisplay").className = "overtime-display idle";
+          $("overtimeNote").textContent =
+            "발화 제한시간 종료 후\n카운트업 시작";
+          $("arcRemain").setAttribute("stroke-dashoffset", "0");
+          $("minHand").setAttribute("x2", "70");
+          $("minHand").setAttribute("y2", "18");
+          $("secHand").setAttribute("x2", "70");
+          $("secHand").setAttribute("y2", "14");
+          setBadge("대기 중", "");
+          setDot("");
+          $("totalSet").textContent = "설정: --분";
+        }
+
+        $("startBtn").addEventListener("click", startSession);
+        $("pauseBtn").addEventListener("click", () => {
+          if (phase === "idle" || phase === "done") return;
+          paused = !paused;
+          $("pauseBtn").innerHTML = paused
+            ? '<i class="ti ti-player-play"></i> 재개'
+            : '<i class="ti ti-player-pause"></i> 일시정지';
+          render();
+        });
+        $("resetBtn").addEventListener("click", resetAll);
+        $("turnBtn").addEventListener("click", logTurn);
+      })();
+    </script>
+  </body>
+</html>
