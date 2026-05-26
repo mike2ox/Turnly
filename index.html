@@ -353,6 +353,15 @@
         color: var(--red);
         background: rgba(240, 96, 96, 0.08);
       }
+      .agenda-item .item-used {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text3);
+        background: var(--bg4);
+        padding: 2px 8px;
+        border-radius: 4px;
+        white-space: nowrap;
+      }
 
       /* add item form */
       .add-item-row {
@@ -531,6 +540,16 @@
         border-color: var(--red);
         color: var(--red);
       }
+      .log-item .log-budget {
+        font-size: 10px;
+        color: var(--text3);
+        white-space: nowrap;
+      }
+      .log-item .log-used {
+        font-size: 11px;
+        color: var(--text2);
+        white-space: nowrap;
+      }
 
       /* ── empty state ── */
       .empty-state {
@@ -591,6 +610,51 @@
         background: var(--bg4);
         border-radius: 2px;
       }
+
+      /* ── total-bar right ── */
+      .total-bar-right {
+        text-align: right;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+      }
+      .total-set {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text3);
+      }
+
+      /* ── mobile ── */
+      @media (max-width: 560px) {
+        .app {
+          padding: 0 0.75rem 4rem;
+        }
+        header {
+          padding: 1.25rem 0 1rem;
+        }
+        .clocks-row {
+          grid-template-columns: 1fr;
+        }
+        svg.analog {
+          width: 120px;
+          height: 120px;
+        }
+        .total-time {
+          font-size: 26px;
+        }
+        .overtime-display {
+          font-size: 32px;
+        }
+        button,
+        input[type="number"],
+        input[type="text"] {
+          height: 44px;
+        }
+        .mode-tab {
+          height: 36px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -607,25 +671,9 @@
           <div class="total-label">전체 대화 시간 남음</div>
           <div class="total-time" id="totalDisplay">--:--</div>
         </div>
-        <div
-          style="
-            text-align: right;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 6px;
-          "
-        >
+        <div class="total-bar-right">
           <span class="status-pill" id="statusPill">대기 중</span>
-          <span
-            style="
-              font-family: var(--mono);
-              font-size: 10px;
-              color: var(--text3);
-            "
-            id="totalSet"
-            >미설정</span
-          >
+          <span class="total-set" id="totalSet">미설정</span>
         </div>
       </div>
 
@@ -759,6 +807,7 @@
             </div>
           </div>
           <div
+            id="setupHint"
             style="
               font-family: var(--mono);
               font-size: 10px;
@@ -772,7 +821,7 @@
           >
             타임박싱 아이템이 있으면 전체 대화 시간은 아이템 합산으로 자동
             계산됩니다.<br />
-            발화 제한시간은 각 아이템별로 개별 적용됩니다.
+            발화 제한시간은 아이템이 없을 때만 적용됩니다.
           </div>
           <div class="controls-grid">
             <button class="primary" id="startBtn" style="flex: 1">
@@ -969,14 +1018,19 @@
             : "";
 
           agenda.forEach((item, idx) => {
+            const isDone = phase !== "idle" && idx < agendaIdx;
+            const doneLog = isDone ? logs[idx] : null;
+            const durText = doneLog
+              ? `${fmt(doneLog.usedSec)} / ${item.minutes}분`
+              : `${item.minutes}분`;
             const row = document.createElement("div");
             row.className =
               "agenda-item" +
               (phase !== "idle" && idx === agendaIdx ? " active-item" : "") +
-              (phase !== "idle" && idx < agendaIdx ? " done-item" : "");
+              (isDone ? " done-item" : "");
             row.innerHTML = `
         <span class="item-name">${escHtml(item.name)}</span>
-        <span class="item-dur">${item.minutes}분</span>
+        <span class="item-dur${doneLog ? " item-used" : ""}">${durText}</span>
         <button class="item-remove" data-idx="${idx}" title="삭제" ${phase !== "idle" ? "disabled" : ""}>
           <i class="ti ti-x" style="font-size:12px;"></i>
         </button>`;
@@ -998,6 +1052,7 @@
               const i = parseInt(btn.dataset.idx);
               agenda.splice(i, 1);
               renderAgenda();
+              syncLimitInput();
             });
           });
         }
@@ -1009,6 +1064,15 @@
             .replace(/>/g, "&gt;");
         }
 
+        function syncLimitInput() {
+          if (phase !== "idle") return;
+          const hasAgenda = agenda.length > 0;
+          $("limitMin").disabled = hasAgenda;
+          $("setupHint").innerHTML = hasAgenda
+            ? "타임박싱 아이템이 있으면 전체 대화 시간은 아이템 합산으로 자동 계산됩니다.<br />발화 제한시간은 각 아이템 시간으로 자동 설정됩니다."
+            : "타임박싱 아이템이 있으면 전체 대화 시간은 아이템 합산으로 자동 계산됩니다.<br />발화 제한시간은 아이템이 없을 때만 적용됩니다.";
+        }
+
         $("addItemBtn").addEventListener("click", () => {
           const name = $("newItemName").value.trim();
           const min = parseInt($("newItemMin").value);
@@ -1018,6 +1082,7 @@
           $("newItemMin").value = "";
           $("newItemName").focus();
           renderAgenda();
+          syncLimitInput();
         });
         $("newItemName").addEventListener("keydown", (e) => {
           if (e.key === "Enter") $("newItemMin").focus();
@@ -1095,6 +1160,7 @@
           $("limitMin").disabled = false;
           $("totalBar").classList.add("done");
           updateBanner();
+          renderAgenda();
           render();
         }
 
@@ -1123,6 +1189,8 @@
           if (phase === "idle" || phase === "done") return;
           turnCount++;
           const overBy = phase === "overtime" ? overtimeSec : 0;
+          const budgetSec = limitSec;
+          const usedSec = (limitSec - limitRemain) + (phase === "overtime" ? overtimeSec : 0);
           const itemName =
             useAgenda && agenda[agendaIdx]
               ? agenda[agendaIdx].name
@@ -1133,11 +1201,13 @@
           li.innerHTML = `
       <span class="log-n">${turnCount}</span>
       <span class="log-name">${escHtml(itemName)}</span>
+      <span class="log-budget">${fmt(budgetSec)}</span>
+      <span class="log-used">${fmt(usedSec)}</span>
       <span class="log-tag ${overBy > 0 ? "bad" : "ok"}">${overBy > 0 ? "+" + fmt(overBy) : "제한 내"}</span>`;
           const empty = $("logEmpty");
           if (empty) empty.remove();
           $("logList").prepend(li);
-          logs.push({ itemName, overBy });
+          logs.push({ itemName, budgetSec, usedSec, overBy });
 
           // advance agenda
           if (useAgenda) {
@@ -1176,6 +1246,7 @@
           $("turnBtn").classList.remove("hot");
           $("totalMin").disabled = false;
           $("limitMin").disabled = false;
+          syncLimitInput();
           $("totalDisplay").textContent = "--:--";
           $("analogLabel").textContent = "--:--";
           $("overtimeDisplay").textContent = "00:00";
@@ -1248,6 +1319,7 @@
         });
 
         renderAgenda();
+        syncLimitInput();
       })();
     </script>
   </body>
