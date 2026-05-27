@@ -9,10 +9,6 @@
       href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Noto+Sans+KR:wght@300;400;500&display=swap"
       rel="stylesheet"
     />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"
-    />
     <style>
       :root {
         --bg: #0f0f0e;
@@ -144,7 +140,7 @@
         border: 0.5px solid var(--line2);
         color: var(--text2);
         background: var(--bg3);
-        transition: all 0.3s;
+        transition: color 0.3s, background-color 0.3s, border-color 0.3s;
       }
       .status-pill.active {
         border-color: var(--accent);
@@ -581,7 +577,7 @@
         cursor: pointer;
         color: var(--text3);
         background: transparent;
-        transition: all 0.15s;
+        transition: color 0.15s, background-color 0.15s;
       }
       .mode-tab.active {
         background: var(--bg2);
@@ -597,6 +593,20 @@
       }
       .mode-panel.active {
         display: block;
+      }
+
+      /* ── icons ── */
+      .icon {
+        width: 16px;
+        height: 16px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex-shrink: 0;
+        display: inline-block;
+        vertical-align: middle;
       }
 
       /* scrollbar */
@@ -658,6 +668,42 @@
     </style>
   </head>
   <body>
+    <!-- SVG icon sprite -->
+    <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+      <symbol id="ico-arrow-right" viewBox="0 0 24 24">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <path d="M5 12l14 0"/><path d="M13 18l6 -6"/><path d="M13 6l6 6"/>
+      </symbol>
+      <symbol id="ico-play" viewBox="0 0 24 24">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <path d="M7 4v16l13 -8z"/>
+      </symbol>
+      <symbol id="ico-pause" viewBox="0 0 24 24">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <path d="M6 5m0 1a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v12a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1z"/>
+        <path d="M14 5m0 1a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v12a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1z"/>
+      </symbol>
+      <symbol id="ico-refresh" viewBox="0 0 24 24">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"/>
+        <path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/>
+      </symbol>
+      <symbol id="ico-plus" viewBox="0 0 24 24">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <path d="M12 5l0 14"/><path d="M5 12l14 0"/>
+      </symbol>
+      <symbol id="ico-x" viewBox="0 0 24 24">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <path d="M18 6l-12 12"/><path d="M6 6l12 12"/>
+      </symbol>
+      <symbol id="ico-trash" viewBox="0 0 24 24">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/>
+        <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/>
+        <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/>
+      </symbol>
+    </svg>
+
     <div class="app">
       <header>
         <span class="logo">Talk Turn Timer</span>
@@ -672,7 +718,7 @@
           <div class="total-time" id="totalDisplay">--:--</div>
         </div>
         <div class="total-bar-right">
-          <span class="status-pill" id="statusPill">대기 중</span>
+          <span class="status-pill" id="statusPill" role="status" aria-live="polite">대기 중</span>
           <span class="total-set" id="totalSet">미설정</span>
         </div>
       </div>
@@ -748,32 +794,35 @@
           <div class="ot-note" id="overtimeNote">
             발화 제한시간 종료 후<br />카운트업 시작
           </div>
-          <button class="turn-btn" id="turnBtn" disabled>
-            <i class="ti ti-arrow-right"></i> 대화 넘기기
+          <button class="turn-btn" id="turnBtn" disabled aria-live="polite">
+            <svg class="icon" aria-hidden="true"><use href="#ico-arrow-right"/></svg> 대화 넘기기
           </button>
         </div>
       </div>
 
       <!-- 탭 -->
       <div class="section">
-        <div class="mode-tabs">
+        <div class="mode-tabs" role="tablist" aria-label="메뉴">
           <button
             class="mode-tab active"
             id="tabSetup"
+            role="tab"
+            aria-selected="true"
+            aria-controls="panelSetup"
             onclick="switchTab('setup')"
           >
             설정
           </button>
-          <button class="mode-tab" id="tabAgenda" onclick="switchTab('agenda')">
+          <button class="mode-tab" id="tabAgenda" role="tab" aria-selected="false" aria-controls="panelAgenda" onclick="switchTab('agenda')">
             타임박싱
           </button>
-          <button class="mode-tab" id="tabLog" onclick="switchTab('log')">
+          <button class="mode-tab" id="tabLog" role="tab" aria-selected="false" aria-controls="panelLog" onclick="switchTab('log')">
             기록
           </button>
         </div>
 
         <!-- 설정 탭 -->
-        <div class="mode-panel active" id="panelSetup">
+        <div class="mode-panel active" id="panelSetup" role="tabpanel" aria-labelledby="tabSetup" tabindex="0">
           <div class="mode-label">기본 시간 설정</div>
           <div
             style="
@@ -803,6 +852,7 @@
                 min="1"
                 max="600"
                 placeholder="20"
+                aria-describedby="setupHint"
               />
             </div>
           </div>
@@ -825,22 +875,22 @@
           </div>
           <div class="controls-grid">
             <button class="primary" id="startBtn" style="flex: 1">
-              <i class="ti ti-player-play"></i> 시작
+              <svg class="icon" aria-hidden="true"><use href="#ico-play"/></svg> 시작
             </button>
             <button id="pauseBtn" disabled style="flex: 1">
-              <i class="ti ti-player-pause"></i> 일시정지
+              <svg class="icon" aria-hidden="true"><use href="#ico-pause"/></svg> 일시정지
             </button>
             <button
               id="resetBtn"
               style="border-color: rgba(240, 96, 96, 0.3); color: #f06060"
             >
-              <i class="ti ti-refresh"></i> 초기화
+              <svg class="icon" aria-hidden="true"><use href="#ico-refresh"/></svg> 초기화
             </button>
           </div>
         </div>
 
         <!-- 타임박싱 탭 -->
-        <div class="mode-panel" id="panelAgenda">
+        <div class="mode-panel" id="panelAgenda" role="tabpanel" aria-labelledby="tabAgenda" tabindex="0">
           <div class="section-header">
             <span class="section-title">아이템 목록</span>
             <span
@@ -891,20 +941,20 @@
               min="1"
               max="300"
             />
-            <button class="icon-btn" id="addItemBtn" title="추가">
-              <i class="ti ti-plus"></i>
+            <button class="icon-btn" id="addItemBtn" aria-label="아이템 추가">
+              <svg class="icon" aria-hidden="true"><use href="#ico-plus"/></svg>
             </button>
           </div>
         </div>
 
         <!-- 기록 탭 -->
-        <div class="mode-panel" id="panelLog">
+        <div class="mode-panel" id="panelLog" role="tabpanel" aria-labelledby="tabLog" tabindex="0">
           <div class="section-header">
             <span class="section-title">대화 넘기기 기록</span>
             <button
               class="icon-btn"
               id="clearLogBtn"
-              title="기록 지우기"
+              aria-label="기록 지우기"
               style="
                 width: auto;
                 padding: 0 8px;
@@ -912,7 +962,7 @@
                 font-family: var(--mono);
               "
             >
-              <i class="ti ti-trash"></i>
+              <svg class="icon" aria-hidden="true"><use href="#ico-trash"/></svg>
             </button>
           </div>
           <ul class="log-list" id="logList">
@@ -1031,8 +1081,8 @@
             row.innerHTML = `
         <span class="item-name">${escHtml(item.name)}</span>
         <span class="item-dur${doneLog ? " item-used" : ""}">${durText}</span>
-        <button class="item-remove" data-idx="${idx}" title="삭제" ${phase !== "idle" ? "disabled" : ""}>
-          <i class="ti ti-x" style="font-size:12px;"></i>
+        <button class="item-remove" data-idx="${idx}" aria-label="'${escHtml(item.name)}' 삭제" ${phase !== "idle" ? "disabled" : ""}>
+          <svg class="icon" aria-hidden="true" style="width:12px;height:12px"><use href="#ico-x"/></svg>
         </button>`;
             list.appendChild(row);
           });
@@ -1068,9 +1118,10 @@
           if (phase !== "idle") return;
           const hasAgenda = agenda.length > 0;
           $("limitMin").disabled = hasAgenda;
-          $("setupHint").innerHTML = hasAgenda
-            ? "타임박싱 아이템이 있으면 전체 대화 시간은 아이템 합산으로 자동 계산됩니다.<br />발화 제한시간은 각 아이템 시간으로 자동 설정됩니다."
-            : "타임박싱 아이템이 있으면 전체 대화 시간은 아이템 합산으로 자동 계산됩니다.<br />발화 제한시간은 아이템이 없을 때만 적용됩니다.";
+          const hintSuffix = hasAgenda
+            ? "발화 제한시간은 각 아이템 시간으로 자동 설정됩니다."
+            : "발화 제한시간은 아이템이 없을 때만 적용됩니다.";
+          $("setupHint").innerHTML = `타임박싱 아이템이 있으면 전체 대화 시간은 아이템 합산으로 자동 계산됩니다.<br />${hintSuffix}`;
         }
 
         $("addItemBtn").addEventListener("click", () => {
@@ -1115,11 +1166,8 @@
 
           if (useAgenda) {
             totalSec = agenda.reduce((a, i) => a + i.minutes, 0) * 60;
-            limitSec = Math.max(1, parseInt($("limitMin").value) || 20) * 60;
             agendaIdx = 0;
-            // set limit to current item's time if item time < limitSec
-            limitSec = Math.min(limitSec, agenda[0].minutes * 60);
-            limitSec = agenda[0].minutes * 60; // actually use item's full time as the clock
+            limitSec = agenda[0].minutes * 60;
           } else {
             totalSec = Math.max(1, parseInt($("totalMin").value) || 60) * 60;
             limitSec = Math.max(1, parseInt($("limitMin").value) || 20) * 60;
@@ -1190,7 +1238,7 @@
           turnCount++;
           const overBy = phase === "overtime" ? overtimeSec : 0;
           const budgetSec = limitSec;
-          const usedSec = (limitSec - limitRemain) + (phase === "overtime" ? overtimeSec : 0);
+          const usedSec = (limitSec - limitRemain) + overBy;
           const itemName =
             useAgenda && agenda[agendaIdx]
               ? agenda[agendaIdx].name
@@ -1241,7 +1289,7 @@
           $("startBtn").disabled = false;
           $("pauseBtn").disabled = true;
           $("pauseBtn").innerHTML =
-            '<i class="ti ti-player-pause"></i> 일시정지';
+            '<svg class="icon" aria-hidden="true"><use href="#ico-pause"></use></svg> 일시정지';
           $("turnBtn").disabled = true;
           $("turnBtn").classList.remove("hot");
           $("totalMin").disabled = false;
@@ -1293,10 +1341,12 @@
         // ── tab ──
         window.switchTab = function (name) {
           ["setup", "agenda", "log"].forEach((t) => {
-            $("tab" + t.charAt(0).toUpperCase() + t.slice(1)).className =
-              "mode-tab" + (t === name ? " active" : "");
-            $("panel" + t.charAt(0).toUpperCase() + t.slice(1)).className =
-              "mode-panel" + (t === name ? " active" : "");
+            const tab = $("tab" + t.charAt(0).toUpperCase() + t.slice(1));
+            const panel = $("panel" + t.charAt(0).toUpperCase() + t.slice(1));
+            const active = t === name;
+            tab.className = "mode-tab" + (active ? " active" : "");
+            tab.setAttribute("aria-selected", active ? "true" : "false");
+            panel.className = "mode-panel" + (active ? " active" : "");
           });
         };
 
@@ -1306,8 +1356,8 @@
           if (phase === "idle" || phase === "done") return;
           paused = !paused;
           $("pauseBtn").innerHTML = paused
-            ? '<i class="ti ti-player-play"></i> 재개'
-            : '<i class="ti ti-player-pause"></i> 일시정지';
+            ? '<svg class="icon" aria-hidden="true"><use href="#ico-play"></use></svg> 재개'
+            : '<svg class="icon" aria-hidden="true"><use href="#ico-pause"></use></svg> 일시정지';
           render();
         });
         $("resetBtn").addEventListener("click", resetAll);
